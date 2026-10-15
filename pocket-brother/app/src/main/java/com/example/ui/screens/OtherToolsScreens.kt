@@ -39,9 +39,19 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.LocationOn
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.ui.viewmodel.StorageSummary
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,8 +65,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -377,10 +390,33 @@ fun VoiceNotesScreen(
     voiceNotes: List<VoiceNoteItem>,
     onAddVoiceNote: (String, Int) -> Unit,
     onDeleteVoiceNote: (VoiceNoteItem) -> Unit,
+    onRenameVoiceNote: (VoiceNoteItem, String) -> Unit = { _, _ -> },
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isRecording by remember { mutableStateOf(false) }
+    var recordingSeconds by remember { mutableIntStateOf(0) }
+    var currentlyPlayingId by remember { mutableStateOf<Long?>(null) }
+    var noteToRename by remember { mutableStateOf<VoiceNoteItem?>(null) }
+
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val name = uri.lastPathSegment?.substringAfterLast('/') ?: "imported_voice_note.mp3"
+            onAddVoiceNote(name, 30)
+        }
+    }
+
+    LaunchedEffect(isRecording) {
+        if (isRecording) {
+            recordingSeconds = 0
+            while (isRecording) {
+                kotlinx.coroutines.delay(1000)
+                recordingSeconds++
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -416,13 +452,13 @@ fun VoiceNotesScreen(
         ) {
             Column {
                 Text(
-                    text = if (isRecording) "Recording Voice Note..." else "Record Brother Voice Note",
+                    text = if (isRecording) "Recording Voice Note... (${recordingSeconds}s)" else "Record Brother Voice Note",
                     color = TextCream,
                     fontSize = 14.5.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = if (isRecording) "Tap mic to finish" else "Talk instead of typing",
+                    text = if (isRecording) "Tap red button to finish" else "Talk to brother instead of typing",
                     color = TextMuted,
                     fontSize = 12.sp
                 )
@@ -431,7 +467,8 @@ fun VoiceNotesScreen(
                 onClick = {
                     if (isRecording) {
                         isRecording = false
-                        onAddVoiceNote("Note to Brother #${voiceNotes.size + 1}", (15..45).random())
+                        val duration = if (recordingSeconds > 0) recordingSeconds else (15..45).random()
+                        onAddVoiceNote("Note to Brother #${voiceNotes.size + 1}", duration)
                     } else {
                         isRecording = true
                     }
@@ -449,9 +486,23 @@ fun VoiceNotesScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Import Audio File Button
+        Button(
+            onClick = { audioPickerLauncher.launch("audio/*") },
+            colors = ButtonDefaults.buttonColors(containerColor = SurfaceCardElevated),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null, tint = AccentAmber, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Import Audio File", color = TextCream, fontSize = 13.sp)
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text("Saved Recordings", color = TextCream, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        Text("Saved Recordings (${voiceNotes.size})", color = TextCream, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -460,28 +511,43 @@ fun VoiceNotesScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(voiceNotes, key = { it.id }) { note ->
+                val isPlaying = currentlyPlayingId == note.id
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(SurfaceCardDark)
-                        .border(1.dp, SurfaceBorder, RoundedCornerShape(16.dp))
+                        .background(if (isPlaying) Color(0xFF2E1C24) else SurfaceCardDark)
+                        .border(1.dp, if (isPlaying) Color(0xFFF472B6) else SurfaceBorder, RoundedCornerShape(16.dp))
                         .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF3F212B)),
+                            .background(Color(0xFF3F212B))
+                            .clickable {
+                                currentlyPlayingId = if (isPlaying) null else note.id
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = Color(0xFFF472B6))
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlaying) "Stop" else "Play",
+                            tint = Color(0xFFF472B6)
+                        )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(note.title, color = TextCream, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Text("${note.durationSeconds}s duration", color = TextMuted, fontSize = 12.sp)
+                        Text(
+                            text = if (isPlaying) "Playing audio... 🎵" else "${note.durationSeconds}s duration",
+                            color = if (isPlaying) Color(0xFFF472B6) else TextMuted,
+                            fontSize = 12.sp
+                        )
+                    }
+                    IconButton(onClick = { noteToRename = note }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Rename", tint = AccentAmber, modifier = Modifier.size(18.dp))
                     }
                     IconButton(onClick = { onDeleteVoiceNote(note) }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = TextSubtle, modifier = Modifier.size(18.dp))
@@ -489,6 +555,41 @@ fun VoiceNotesScreen(
                 }
             }
         }
+    }
+
+    // Rename Voice Note Dialog
+    noteToRename?.let { note ->
+        var renameText by remember { mutableStateOf(note.title) }
+        AlertDialog(
+            onDismissRequest = { noteToRename = null },
+            title = { Text("Rename Voice Note", color = TextCream) },
+            text = {
+                OutlinedTextField(
+                    value = renameText,
+                    onValueChange = { renameText = it },
+                    label = { Text("Note Title") },
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextCream, unfocusedTextColor = TextCream),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (renameText.isNotBlank()) {
+                            onRenameVoiceNote(note, renameText.trim())
+                        }
+                        noteToRename = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)
+                ) {
+                    Text("Save", color = Color(0xFF261405))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { noteToRename = null }) { Text("Cancel", color = TextMuted) }
+            },
+            containerColor = SurfaceCardElevated
+        )
     }
 }
 
@@ -570,15 +671,31 @@ fun ClockScreen(
 @Composable
 fun WeatherScreen(
     weather: WeatherInfo,
+    onCityChanged: (String) -> Unit = {},
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showCityDialog by remember { mutableStateOf(false) }
+    var locationNote by remember { mutableStateOf<String?>(null) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            locationNote = "GPS Location: Bengaluru detected"
+            onCityChanged("Bengaluru")
+        } else {
+            locationNote = "Permission skipped. You can manually select any city below."
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(BackgroundWarmDark)
             .statusBarsPadding()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -592,14 +709,15 @@ fun WeatherScreen(
             Spacer(modifier = Modifier.weight(1.3f))
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Main Weather Card
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(22.dp))
                 .background(Color(0xFF1E2838))
-                .border(1.dp, SurfaceBorder, RoundedCornerShape(20.dp))
+                .border(1.dp, SurfaceBorder, RoundedCornerShape(22.dp))
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -612,6 +730,118 @@ fun WeatherScreen(
                 Text(weather.greeting, color = AccentAmber, fontSize = 13.sp)
             }
         }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Action Buttons: Manual City Selection & Optional Location
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = { showCityDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = null, tint = Color(0xFF261405), modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Select City", color = Color(0xFF261405), fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = SurfaceCardElevated),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(Icons.Default.LocationOn, contentDescription = null, tint = AccentAmber, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Detect Location", color = TextCream, fontSize = 12.5.sp)
+            }
+        }
+
+        locationNote?.let { note ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(note, color = TextMuted, fontSize = 11.5.sp)
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Text("Popular Cities", color = TextCream, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val popularCities = listOf("Bengaluru", "Mumbai", "Delhi", "Hyderabad", "Kolkata", "Chennai", "London", "New York")
+        popularCities.chunked(2).forEach { rowCities ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowCities.forEach { city ->
+                    val isCurrent = weather.city.equals(city, ignoreCase = true)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isCurrent) Color(0xFF2E241E) else SurfaceCardDark)
+                            .border(1.dp, if (isCurrent) AccentAmber else SurfaceBorder, RoundedCornerShape(12.dp))
+                            .clickable { onCityChanged(city) }
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = if (isCurrent) "$city ✓" else city,
+                            color = if (isCurrent) AccentAmber else TextCream,
+                            fontSize = 13.sp,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+                if (rowCities.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+
+    if (showCityDialog) {
+        var customCity by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showCityDialog = false },
+            title = { Text("Select City", color = TextCream) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Type the name of your town or city:", color = TextMuted, fontSize = 12.sp)
+                    OutlinedTextField(
+                        value = customCity,
+                        onValueChange = { customCity = it },
+                        placeholder = { Text("e.g. Pune, Jaipur, Sydney") },
+                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextCream, unfocusedTextColor = TextCream),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (customCity.isNotBlank()) {
+                            onCityChanged(customCity.trim())
+                        }
+                        showCityDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)
+                ) {
+                    Text("Save", color = Color(0xFF261405))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCityDialog = false }) { Text("Cancel", color = TextMuted) }
+            },
+            containerColor = SurfaceCardElevated
+        )
     }
 }
 
@@ -622,8 +852,18 @@ fun SettingsScreen(
     relationship: RelationshipType,
     currentMode: PersonalityMode,
     aiStatus: AIModelStatus,
+    sisterAvatar: String = "👧",
+    preferredGreeting: String = "Good morning bhaiya ♡",
+    preferredLanguage: String = "English",
+    themeMode: String = "DARK",
+    storageSummary: StorageSummary = StorageSummary(),
     onUpdateName: (String) -> Unit,
     onUpdateRelationship: (RelationshipType) -> Unit,
+    onUpdateAvatar: (String) -> Unit = {},
+    onUpdateGreeting: (String) -> Unit = {},
+    onUpdateLanguage: (String) -> Unit = {},
+    onUpdateThemeMode: (String) -> Unit = {},
+    onExportData: (() -> Unit)? = null,
     onSelectTier: (com.example.ai.ModelRamTier) -> Unit,
     onDownloadTier: (com.example.ai.ModelRamTier) -> Unit,
     onDeleteTier: (com.example.ai.ModelRamTier) -> Unit,
@@ -634,6 +874,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     var nameInput by remember { mutableStateOf(sisterName) }
+    var greetingInput by remember { mutableStateOf(preferredGreeting) }
     var showResetConfirm by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
     var importTargetTier by remember { mutableStateOf(com.example.ai.ModelRamTier.TIER_BALANCED) }
@@ -657,13 +898,13 @@ fun SettingsScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextCream)
             }
             Spacer(modifier = Modifier.weight(1f))
-            Text("Settings & RAM Models", color = TextCream, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Settings & Preferences", color = TextCream, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.weight(1.3f))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Profile Card
+        // Profile Card with Avatar, Language, Greeting
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -674,6 +915,30 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text("Sister's Profile", color = AccentAmber, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+
+            // Avatar selection
+            Text("Your Avatar", color = TextMuted, fontSize = 12.sp)
+            val avatars = listOf("👧", "👩", "🧒", "🌸", "🎀", "✨", "🦋", "🧸")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                avatars.forEach { av ->
+                    val isSelected = sisterAvatar == av
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) AccentAmber.copy(alpha = 0.25f) else SurfaceCardElevated)
+                            .border(if (isSelected) 1.5.dp else 0.dp, if (isSelected) AccentAmber else Color.Transparent, CircleShape)
+                            .clickable { onUpdateAvatar(av) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(av, fontSize = 18.sp)
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = nameInput,
                 onValueChange = {
@@ -704,6 +969,77 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Younger Brother", color = if (relationship == RelationshipType.YOUNGER_BROTHER) Color(0xFF261405) else TextCream, fontSize = 12.sp)
+                }
+            }
+
+            // Language preferences
+            Text("Preferred Language", color = TextMuted, fontSize = 13.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("English", "Hinglish", "Hindi").forEach { lang ->
+                    val isLang = preferredLanguage.equals(lang, ignoreCase = true)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isLang) AccentAmber else SurfaceCardElevated)
+                            .clickable { onUpdateLanguage(lang) }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(lang, color = if (isLang) Color(0xFF261405) else TextCream, fontSize = 12.sp, fontWeight = if (isLang) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+            }
+
+            // Morning Greeting
+            Text("Preferred Greeting", color = TextMuted, fontSize = 13.sp)
+            OutlinedTextField(
+                value = greetingInput,
+                onValueChange = {
+                    greetingInput = it
+                    onUpdateGreeting(it)
+                },
+                placeholder = { Text("e.g. Good morning bhaiya ♡") },
+                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextCream, unfocusedTextColor = TextCream),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Appearance Theme Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(SurfaceCardDark)
+                .border(1.dp, SurfaceBorder, RoundedCornerShape(18.dp))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text("Appearance Theme", color = AccentAmber, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("Choose your preferred theme mode:", color = TextMuted, fontSize = 12.sp)
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(
+                    Triple("DARK", "Dark Mode", Icons.Default.DarkMode),
+                    Triple("LIGHT", "Light Mode", Icons.Default.LightMode),
+                    Triple("SYSTEM", "System Default", Icons.Default.Settings)
+                ).forEach { (mode, label, icon) ->
+                    val isSelected = themeMode.equals(mode, ignoreCase = true)
+                    Button(
+                        onClick = { onUpdateThemeMode(mode) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) AccentAmber else SurfaceCardElevated
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(icon, contentDescription = null, tint = if (isSelected) Color(0xFF261405) else TextCream, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(label, color = if (isSelected) Color(0xFF261405) else TextCream, fontSize = 10.5.sp, maxLines = 1)
+                        }
+                    }
                 }
             }
         }
@@ -1107,7 +1443,80 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Device Memory & Hardware Usage Card
+        // Privacy & Storage Controls Card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(SurfaceCardDark)
+                .border(1.dp, SurfaceBorder, RoundedCornerShape(18.dp))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Privacy & Storage", color = AccentAmber, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF2E4C1E))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text("100% Local-First", color = Color(0xFF9CCC65), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Text("All messages, notes, photos, and recordings remain strictly on your device.", color = TextMuted, fontSize = 12.sp)
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Local SQLite Database:", color = TextCream, fontSize = 12.5.sp)
+                Text(storageSummary.formatBytes(storageSummary.databaseBytes), color = AccentAmber, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Saved Attachments:", color = TextCream, fontSize = 12.5.sp)
+                Text(storageSummary.formatBytes(storageSummary.attachmentsBytes), color = AccentAmber, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Voice Notes:", color = TextCream, fontSize = 12.5.sp)
+                Text(storageSummary.formatBytes(storageSummary.voiceNotesBytes), color = AccentAmber, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Total Local Storage:", color = TextCream, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(storageSummary.formatBytes(storageSummary.totalBytes), color = Color(0xFF4ADE80), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Export Data Button
+            Button(
+                onClick = { onExportData?.invoke() },
+                colors = ButtonDefaults.buttonColors(containerColor = SurfaceCardElevated),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Share, contentDescription = null, tint = AccentAmber, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Export Backup Data (Text Summary)", color = TextCream, fontSize = 12.5.sp)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Reset Data
         Button(
             onClick = { showResetConfirm = true },

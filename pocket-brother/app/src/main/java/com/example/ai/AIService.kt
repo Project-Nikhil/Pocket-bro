@@ -100,10 +100,23 @@ sealed class BrotherToolAction {
 }
 
 data class BrotherResponse(
-    val replyMessages: List<String>,
+    val replyMessage: String,
     val toolAction: BrotherToolAction? = null,
     val effectiveMode: PersonalityMode
-)
+) {
+    val replyMessages: List<String>
+        get() = listOf(replyMessage)
+
+    constructor(
+        replyMessages: List<String>,
+        toolAction: BrotherToolAction? = null,
+        effectiveMode: PersonalityMode
+    ) : this(
+        replyMessage = replyMessages.joinToString("\n\n"),
+        toolAction = toolAction,
+        effectiveMode = effectiveMode
+    )
+}
 
 interface AIService {
     suspend fun generateResponse(

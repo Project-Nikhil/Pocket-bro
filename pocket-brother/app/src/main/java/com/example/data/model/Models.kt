@@ -28,7 +28,11 @@ data class ChatMessage(
     val isFromSister: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val mode: String = PersonalityMode.COMFORT.name,
-    val isRead: Boolean = true
+    val isRead: Boolean = true,
+    val attachmentUri: String? = null,
+    val attachmentType: String? = null, // "IMAGE", "PDF", "DOC", "TEXT", "AUDIO"
+    val attachmentName: String? = null,
+    val attachmentSize: Long = 0L
 )
 
 @Entity(tableName = "calendar_events")

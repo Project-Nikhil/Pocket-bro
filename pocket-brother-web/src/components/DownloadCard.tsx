@@ -1,13 +1,28 @@
-import { Download, Smartphone, ShieldCheck, HardDrive, Cpu, Layers, HelpCircle } from 'lucide-react';
-import { APP_CONFIG } from '../config/appConfig';
+import { useState } from 'react';
+import { Download, Smartphone, ShieldCheck, HardDrive, Cpu, Layers, HelpCircle, Sparkles, ChevronDown, ChevronUp, CheckCircle, Wrench } from 'lucide-react';
+import { APP_CONFIG, APP_RELEASES, type AppRelease } from '../config/appConfig';
 
 interface DownloadCardProps {
   onOpenBuildGuide?: () => void;
 }
 
 export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
+  const [selectedVersion, setSelectedVersion] = useState<string>(APP_CONFIG.version);
+  const [showFixes, setShowFixes] = useState<boolean>(true);
+
+  const activeRelease: AppRelease = APP_RELEASES.find(r => r.version === selectedVersion) || APP_RELEASES[0];
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Feature': return { bg: 'rgba(52, 211, 153, 0.15)', text: '#34D399', border: 'rgba(52, 211, 153, 0.3)' };
+      case 'Fix': return { bg: 'rgba(248, 113, 113, 0.15)', text: '#F87171', border: 'rgba(248, 113, 113, 0.3)' };
+      case 'UI/UX': return { bg: 'rgba(142, 167, 233, 0.15)', text: '#8EA7E9', border: 'rgba(142, 167, 233, 0.3)' };
+      default: return { bg: 'rgba(245, 197, 138, 0.15)', text: '#F5C58A', border: 'rgba(245, 197, 138, 0.3)' };
+    }
+  };
+
   return (
-    <div className="container" style={{ marginBottom: '48px' }}>
+    <div id="download-versions" className="container" style={{ marginBottom: '48px' }}>
       <div className="download-spec-card">
         {/* Amber accent line */}
         <div style={{
@@ -20,7 +35,7 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
         }} />
 
         <div className="download-card-body">
-          {/* Top Status */}
+          {/* Top Status & Verified Badge */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -32,15 +47,46 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="pill-badge" style={{ fontSize: '0.75rem', padding: '3px 10px' }}>
                 <ShieldCheck size={13} color="#34D399" />
-                Verified APK Build
+                Verified Android APK
               </span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)' }}>
-                Target SDK 36
+                Target SDK 36 • Android 7.0+
               </span>
             </div>
             
             <div style={{ fontSize: '0.78rem', color: 'var(--accent-amber)', fontWeight: 600 }}>
-              ● Standalone Sideload
+              ● In-Place Upgrade Supported
+            </div>
+          </div>
+
+          {/* Version Selector Tabs (All versions work!) */}
+          <div style={{ marginBottom: '18px' }}>
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-subtle)', fontWeight: 700, letterSpacing: '0.05em', marginBottom: '8px' }}>
+              Select APK Release Version:
+            </div>
+            <div className="version-tabs-container">
+              {APP_RELEASES.map((rel) => {
+                const isSelected = rel.version === activeRelease.version;
+                return (
+                  <button
+                    key={rel.version}
+                    onClick={() => setSelectedVersion(rel.version)}
+                    className={`version-tab-btn ${isSelected ? 'active' : ''}`}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.925rem' }}>v{rel.version}</span>
+                      {rel.isLatest && (
+                        <span className="latest-pill">
+                          <Sparkles size={11} /> Latest
+                        </span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: isSelected ? 'rgba(26,18,11,0.85)' : 'var(--text-muted)' }}>
+                      {rel.apkSize}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -52,7 +98,7 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
                 <span>Size</span>
               </div>
               <div className="metric-val" style={{ color: 'var(--accent-amber)' }}>
-                {APP_CONFIG.apkEstimatedSize}
+                {activeRelease.apkSize}
               </div>
             </div>
 
@@ -62,7 +108,7 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
                 <span>Version</span>
               </div>
               <div className="metric-val">
-                v{APP_CONFIG.version}
+                v{activeRelease.version}
               </div>
             </div>
 
@@ -82,7 +128,7 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
                 <span>Engine</span>
               </div>
               <div className="metric-val">
-                On-Device
+                {activeRelease.version === '0.0.2' ? 'Gemma + Core' : 'Instant Core'}
               </div>
             </div>
           </div>
@@ -90,8 +136,8 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
           {/* CTA & Fallback direct link */}
           <div style={{ marginTop: '20px' }}>
             <a
-              href={APP_CONFIG.apkDownloadPath}
-              download={APP_CONFIG.apkFileName}
+              href={activeRelease.apkDownloadPath}
+              download={activeRelease.apkFileName}
               className="btn-primary"
               id="download-card-btn"
               style={{
@@ -102,7 +148,7 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
               }}
             >
               <Download size={18} />
-              <span>Download APK ({APP_CONFIG.apkEstimatedSize})</span>
+              <span>Download v{activeRelease.version} APK ({activeRelease.apkSize})</span>
             </a>
 
             <div style={{
@@ -115,14 +161,14 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
               color: 'var(--text-subtle)',
               marginTop: '10px',
             }}>
-              <span>Direct package link: </span>
+              <span>Direct link: </span>
               <a
-                href={APP_CONFIG.apkDownloadPath}
+                href={activeRelease.apkDownloadPath}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: 'var(--accent-amber)', textDecoration: 'underline' }}
               >
-                {APP_CONFIG.apkFileName}
+                {activeRelease.apkFileName}
               </a>
               {onOpenBuildGuide && (
                 <>
@@ -146,6 +192,118 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
             </div>
           </div>
 
+          {/* Release Notes & Fixes Drawer */}
+          <div style={{
+            marginTop: '22px',
+            borderTop: '1px solid var(--border-medium)',
+            paddingTop: '16px',
+          }}>
+            <button
+              onClick={() => setShowFixes(!showFixes)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 0',
+                color: 'var(--text-cream)',
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Wrench size={16} color="var(--accent-amber)" />
+                <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                  What's in v{activeRelease.version} & Release Fixes
+                </span>
+                <span style={{
+                  fontSize: '0.72rem',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(245, 197, 138, 0.1)',
+                  color: 'var(--accent-amber)',
+                  fontWeight: 600,
+                }}>
+                  {activeRelease.fixes.length} changes
+                </span>
+              </div>
+              {showFixes ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
+            </button>
+
+            {showFixes && (
+              <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* Summary banner */}
+                <div style={{
+                  padding: '12px 14px',
+                  background: 'rgba(26, 20, 17, 0.7)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.5,
+                }}>
+                  <strong style={{ color: 'var(--text-cream)' }}>{activeRelease.headline}: </strong>
+                  {activeRelease.summary}
+                </div>
+
+                {/* Highlights List */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  margin: '6px 0',
+                }}>
+                  {activeRelease.highlights.map((h, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.825rem', color: 'var(--text-cream)' }}>
+                      <CheckCircle size={14} color="#34D399" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span>{h}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Detailed Fixes Breakdown */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                  {activeRelease.fixes.map((fix, idx) => {
+                    const catStyle = getCategoryColor(fix.category);
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          background: 'rgba(32, 25, 21, 0.55)',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: 'var(--radius-md)',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-cream)' }}>
+                            {fix.title}
+                          </span>
+                          <span style={{
+                            fontSize: '0.675rem',
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: 'var(--radius-full)',
+                            background: catStyle.bg,
+                            color: catStyle.text,
+                            border: `1px solid ${catStyle.border}`,
+                            textTransform: 'uppercase',
+                            flexShrink: 0,
+                          }}>
+                            {fix.category}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                          {fix.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -158,6 +316,48 @@ export const DownloadCard = ({ onOpenBuildGuide }: DownloadCardProps) => {
           position: relative;
           overflow: hidden;
           box-shadow: var(--shadow-card);
+        }
+
+        .version-tabs-container {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
+        .version-tab-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 14px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-medium);
+          background: var(--surface-card);
+          color: var(--text-cream);
+          transition: all 0.2s;
+          cursor: pointer;
+        }
+
+        .version-tab-btn.active {
+          border-color: var(--accent-amber);
+          background: var(--accent-amber);
+          color: #1A120B;
+        }
+
+        .latest-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 1px 6px;
+          border-radius: var(--radius-full);
+          background: #1A120B;
+          color: var(--accent-amber);
+        }
+
+        .version-tab-btn.active .latest-pill {
+          background: #1A120B;
+          color: var(--accent-amber);
         }
 
         .spec-metrics-grid {

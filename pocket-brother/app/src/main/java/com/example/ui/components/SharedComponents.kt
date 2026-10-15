@@ -42,34 +42,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.PersonalityMode
-import com.example.ui.theme.AccentAmber
-import com.example.ui.theme.AccentGold
-import com.example.ui.theme.BackgroundWarmDark
-import com.example.ui.theme.ModeComfortAccent
-import com.example.ui.theme.ModeComfortBg
-import com.example.ui.theme.ModeComfortBorder
-import com.example.ui.theme.ModeFunnyAccent
-import com.example.ui.theme.ModeFunnyBg
-import com.example.ui.theme.ModeFunnyBorder
-import com.example.ui.theme.ModeIrritativeAccent
-import com.example.ui.theme.ModeIrritativeBg
-import com.example.ui.theme.ModeIrritativeBorder
-import com.example.ui.theme.SurfaceBorder
-import com.example.ui.theme.SurfaceBorderSubtle
-import com.example.ui.theme.SurfaceCardDark
-import com.example.ui.theme.SurfaceCardElevated
-import com.example.ui.theme.SurfaceDark
-import com.example.ui.theme.TextCream
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextSubtle
-import com.example.ui.theme.WhatsAppBlueTicks
-import com.example.ui.theme.WhatsAppGreenBubble
-import com.example.ui.theme.WhatsAppReceivedBubble
+import com.example.ui.theme.*
 import com.example.ui.viewmodel.Screen
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -81,76 +60,92 @@ fun PocketModeSwitcher(
     onModeSelected: (PersonalityMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        ModePill(
-            title = "Comfort",
-            emoji = "🥺",
-            isSelected = currentMode == PersonalityMode.COMFORT,
-            accentColor = ModeComfortAccent,
-            bgColor = ModeComfortBg,
-            borderColor = ModeComfortBorder,
-            onClick = { onModeSelected(PersonalityMode.COMFORT) },
-            modifier = Modifier.weight(1f)
-        )
-        ModePill(
-            title = "Irritative",
-            emoji = "😈",
-            isSelected = currentMode == PersonalityMode.IRRITATIVE,
-            accentColor = ModeIrritativeAccent,
-            bgColor = ModeIrritativeBg,
-            borderColor = ModeIrritativeBorder,
-            onClick = { onModeSelected(PersonalityMode.IRRITATIVE) },
-            modifier = Modifier.weight(1f)
-        )
-        ModePill(
-            title = "Funny",
-            emoji = "😄",
-            isSelected = currentMode == PersonalityMode.FUNNY,
-            accentColor = ModeFunnyAccent,
-            bgColor = ModeFunnyBg,
-            borderColor = ModeFunnyBorder,
-            onClick = { onModeSelected(PersonalityMode.FUNNY) },
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(SurfaceDark)
+                .border(0.8.dp, SurfaceBorder, RoundedCornerShape(8.dp))
+                .padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            ModeSegmentButton(
+                label = "COMFORT",
+                subLabel = "Empathetic",
+                isSelected = currentMode == PersonalityMode.COMFORT,
+                accentColor = ModeComfortAccent,
+                onClick = { onModeSelected(PersonalityMode.COMFORT) },
+                modifier = Modifier.weight(1f)
+            )
+            ModeSegmentButton(
+                label = "SHARP TEASE",
+                subLabel = "Roast & Banter",
+                isSelected = currentMode == PersonalityMode.IRRITATIVE,
+                accentColor = ModeIrritativeAccent,
+                onClick = { onModeSelected(PersonalityMode.IRRITATIVE) },
+                modifier = Modifier.weight(1f)
+            )
+            ModeSegmentButton(
+                label = "WITTY LOGIC",
+                subLabel = "Humor & Quick",
+                isSelected = currentMode == PersonalityMode.FUNNY,
+                accentColor = ModeFunnyAccent,
+                onClick = { onModeSelected(PersonalityMode.FUNNY) },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
 @Composable
-fun ModePill(
-    title: String,
-    emoji: String,
+fun ModeSegmentButton(
+    label: String,
+    subLabel: String,
     isSelected: Boolean,
     accentColor: Color,
-    bgColor: Color,
-    borderColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bg = if (isSelected) bgColor else SurfaceCardDark.copy(alpha = 0.6f)
-    val border = if (isSelected) borderColor else SurfaceBorderSubtle
+    val bg = if (isSelected) SurfaceCardElevated else Color.Transparent
+    val border = if (isSelected) accentColor.copy(alpha = 0.5f) else Color.Transparent
 
-    Row(
+    Column(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(bg)
-            .border(1.2.dp, border, RoundedCornerShape(20.dp))
+            .border(0.8.dp, border, RoundedCornerShape(6.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 8.dp, horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+            .padding(vertical = 5.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(text = emoji, fontSize = 16.sp)
-        Spacer(modifier = Modifier.width(6.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .background(accentColor, CircleShape)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(
+                text = label,
+                color = if (isSelected) TextCream else TextMuted,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            )
+        }
         Text(
-            text = title,
-            color = if (isSelected) TextCream else TextMuted,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+            text = subLabel,
+            color = if (isSelected) accentColor else TextSubtle,
+            fontSize = 9.sp,
+            fontFamily = FontFamily.Monospace
         )
     }
 }
@@ -160,71 +155,188 @@ fun WhatsAppChatBubble(
     text: String,
     isFromSister: Boolean,
     timestamp: Long,
+    attachmentUri: String? = null,
+    attachmentType: String? = null,
+    attachmentName: String? = null,
+    attachmentSize: Long = 0L,
     modifier: Modifier = Modifier
 ) {
-    val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     val formattedTime = timeFormat.format(Date(timestamp))
 
-    val bubbleBg = if (isFromSister) WhatsAppGreenBubble else WhatsAppReceivedBubble
-    val bubbleShape = if (isFromSister) {
-        RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
-    } else {
-        RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
-    }
+    val bubbleBg = if (isFromSister) Color(0xFF131F33) else Color(0xFF0F1420)
+    val bubbleBorder = if (isFromSister) Color(0xFF263D66) else SurfaceBorder
+    val bubbleShape = RoundedCornerShape(
+        topStart = 10.dp,
+        topEnd = 10.dp,
+        bottomStart = if (isFromSister) 10.dp else 2.dp,
+        bottomEnd = if (isFromSister) 2.dp else 10.dp
+    )
+
+    // Check if message has an AI model header tag
+    val hasModelTag = text.startsWith("[") && text.contains("]")
+    val modelTag = if (hasModelTag) text.substringAfter("[").substringBefore("]") else null
+    val bodyText = if (hasModelTag) text.substringAfter("]").trim() else text
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 3.dp),
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         contentAlignment = if (isFromSister) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 290.dp)
+                .widthIn(max = 310.dp)
                 .clip(bubbleShape)
                 .background(bubbleBg)
-                .border(
-                    width = 0.8.dp,
-                    color = if (isFromSister) Color(0x3353BDEB) else SurfaceBorderSubtle,
-                    shape = bubbleShape
-                )
-                .padding(horizontal = 12.dp, vertical = 7.dp)
+                .border(0.8.dp, bubbleBorder, bubbleShape)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            Text(
-                text = text,
-                color = TextCream,
-                fontSize = 14.5.sp,
-                lineHeight = 20.sp
-            )
-            Spacer(modifier = Modifier.height(2.dp))
+            // Developer Terminal Metadata Header
             Row(
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isFromSister) "> OPERATOR" else "> BROTHER_NODE",
+                    color = if (isFromSister) AccentCyan else AccentIndigo,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 9.5.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (modelTag != null) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color(0xFF1E283E))
+                            .border(0.6.dp, AccentCyan.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(4.dp)
+                                    .background(AccentEmerald, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = modelTag.uppercase(Locale.getDefault()),
+                                color = AccentCyan,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Render attachment payload if present
+            if (attachmentUri != null || attachmentType != null) {
+                val type = attachmentType?.uppercase(Locale.getDefault()) ?: "DATA_PAYLOAD"
+                val name = attachmentName ?: "payload"
+                val sizeStr = if (attachmentSize > 0) {
+                    if (attachmentSize > 1024 * 1024) String.format(Locale.getDefault(), "%.1f MB", attachmentSize / (1024f * 1024f))
+                    else "${attachmentSize / 1024} KB"
+                } else ""
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF0A0E17))
+                        .border(0.6.dp, SurfaceBorder, RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val badgeColor = when (type) {
+                        "IMAGE" -> AccentCyan
+                        "PDF" -> AccentRose
+                        "AUDIO" -> AccentPurple
+                        "DOC", "DOCX" -> Color(0xFF38BDF8)
+                        else -> AccentAmber
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(badgeColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (type) {
+                                "IMAGE" -> "IMG"
+                                "PDF" -> "PDF"
+                                "AUDIO" -> "AUD"
+                                "DOC", "DOCX" -> "DOC"
+                                "TEXT" -> "TXT"
+                                else -> "BIN"
+                            },
+                            color = badgeColor,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 8.5.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = name,
+                            color = TextCream,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = if (sizeStr.isNotBlank()) "TYPE: $type | SIZE: $sizeStr" else "TYPE: $type",
+                            color = TextSubtle,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+
+            // Message Payload Content
+            if (bodyText.isNotBlank()) {
+                Text(
+                    text = bodyText,
+                    color = TextCream,
+                    fontSize = 13.5.sp,
+                    lineHeight = 19.sp,
+                    letterSpacing = 0.2.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Telemetry Footer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = formattedTime,
-                    color = if (isFromSister) TextCream.copy(alpha = 0.65f) else TextSubtle,
-                    fontSize = 10.5.sp
+                    color = TextSubtle,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 9.5.sp
                 )
                 if (isFromSister) {
                     Spacer(modifier = Modifier.width(4.dp))
-                    // WhatsApp style double tick
-                    Row {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Read",
-                            tint = WhatsAppBlueTicks,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = WhatsAppBlueTicks,
-                            modifier = Modifier
-                                .size(12.dp)
-                                .offset(x = (-6).dp)
-                        )
-                    }
+                    Text(
+                        text = "✓✓",
+                        color = AccentCyan,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -236,38 +348,47 @@ fun QuickReactionsRow(
     onSelectReaction: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val reactions = listOf(
-        "I miss you 🥺",
-        "I'm sad today",
-        "Roast me 😂",
-        "Why are you ignoring me 😒",
-        "You're the best 💙",
-        "Start 25 min timer ⏱️",
-        "Remind me to drink water 💧"
+    val prompts = listOf(
+        "Run brother check-in",
+        "Help me understand a topic",
+        "Give me honest life advice",
+        "Drop a sibling roast",
+        "Start 25m focus timer",
+        "Add exam study reminder",
+        "What's your current model status?"
     )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        reactions.forEach { reaction ->
+        prompts.forEach { prompt ->
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(SurfaceCardElevated)
-                    .border(1.dp, SurfaceBorder, RoundedCornerShape(18.dp))
-                    .clickable { onSelectReaction(reaction) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(SurfaceCardDark)
+                    .border(0.8.dp, SurfaceBorder, RoundedCornerShape(6.dp))
+                    .clickable { onSelectReaction(prompt) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
-                Text(
-                    text = reaction,
-                    color = TextCream,
-                    fontSize = 12.5.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "> ",
+                        color = AccentCyan,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = prompt,
+                        color = TextMuted,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
@@ -281,10 +402,10 @@ fun PocketBottomBar(
 ) {
     NavigationBar(
         modifier = modifier
-            .border(width = 1.dp, color = SurfaceBorder, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+            .border(width = 0.8.dp, color = SurfaceBorder, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
         containerColor = SurfaceDark,
-        tonalElevation = 8.dp
+        tonalElevation = 4.dp
     ) {
         val items = listOf(
             Triple(Screen.Home, Icons.Filled.Home, Icons.Outlined.Home),
@@ -295,6 +416,14 @@ fun PocketBottomBar(
 
         items.forEach { (screen, selectedIcon, unselectedIcon) ->
             val isSelected = currentScreen.route == screen.route
+            val navLabel = when (screen) {
+                Screen.Home -> "DASHBOARD"
+                Screen.Chat -> "CONSOLE"
+                Screen.ToolsMenu -> "MODULES"
+                Screen.Settings -> "SYSTEM"
+                else -> screen.title.uppercase(Locale.getDefault())
+            }
+
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onNavigate(screen) },
@@ -302,22 +431,24 @@ fun PocketBottomBar(
                     Icon(
                         imageVector = if (isSelected) selectedIcon else unselectedIcon,
                         contentDescription = screen.title,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 label = {
                     Text(
-                        text = screen.title,
-                        fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        text = navLabel,
+                        fontSize = 9.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        letterSpacing = 0.5.sp
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = AccentAmber,
-                    selectedTextColor = AccentAmber,
-                    indicatorColor = SurfaceCardElevated,
-                    unselectedIconColor = TextMuted,
-                    unselectedTextColor = TextMuted
+                    selectedIconColor = AccentCyan,
+                    selectedTextColor = AccentCyan,
+                    indicatorColor = Color(0xFF1E283E),
+                    unselectedIconColor = TextSubtle,
+                    unselectedTextColor = TextSubtle
                 )
             )
         }

@@ -25,6 +25,17 @@ class PocketBrotherRepository(
     private val preferencesManager: PreferencesManager,
     private val aiService: AIService = OfflineBrotherEngine()
 ) {
+    init {
+        try {
+            val savedEngine = com.example.ai.EngineType.valueOf(preferencesManager.activeEngine.value)
+            val savedTier = com.example.ai.ModelRamTier.entries.firstOrNull {
+                it.id == preferencesManager.selectedTier.value
+            } ?: com.example.ai.ModelRamTier.TIER_BALANCED
+            aiService.selectTier(savedTier)
+            aiService.setEngineType(savedEngine)
+        } catch (_: Exception) {}
+    }
+
     // Preferences
     val sisterName: StateFlow<String> = preferencesManager.sisterName
     val relationship: StateFlow<RelationshipType> = preferencesManager.relationship
@@ -43,7 +54,13 @@ class PocketBrotherRepository(
     // Chat
     val allMessages: Flow<List<ChatMessage>> = database.chatDao().getAllMessages()
 
-    suspend fun sendSisterMessage(text: String): BrotherResponse {
+    suspend fun sendSisterMessage(
+        text: String,
+        attachmentUri: String? = null,
+        attachmentType: String? = null,
+        attachmentName: String? = null,
+        attachmentSize: Long = 0L
+    ): BrotherResponse {
         val now = System.currentTimeMillis()
         val currentRel = relationship.value
         val mode = currentMode.value
@@ -55,14 +72,28 @@ class PocketBrotherRepository(
                 text = text,
                 isFromSister = true,
                 timestamp = now,
-                mode = mode.name
+                mode = mode.name,
+                attachmentUri = attachmentUri,
+                attachmentType = attachmentType,
+                attachmentName = attachmentName,
+                attachmentSize = attachmentSize
             )
         )
 
         // Generate Brother response
         val history = database.chatDao().getAllMessages().first().takeLast(6).map { it.text }
+        val promptText = if (text.isNotBlank()) {
+            text
+        } else if (attachmentType == "IMAGE") {
+            "I sent you a photo: ${attachmentName ?: "image"}"
+        } else if (attachmentType == "AUDIO") {
+            "I sent you a voice recording: ${attachmentName ?: "audio"}"
+        } else {
+            "I sent you a file: ${attachmentName ?: "document"}"
+        }
+
         val response = aiService.generateResponse(
-            sisterMessage = text,
+            sisterMessage = promptText,
             relationship = currentRel,
             currentMode = mode,
             sisterName = name,
@@ -72,21 +103,29 @@ class PocketBrotherRepository(
         // Handle tool action if present
         response.toolAction?.let { executeToolAction(it) }
 
-        // Insert Brother replies with small timestamps staggering
-        var replyTime = now + 1000
-        for (reply in response.replyMessages) {
-            database.chatDao().insertMessage(
-                ChatMessage(
-                    text = reply,
-                    isFromSister = false,
-                    timestamp = replyTime,
-                    mode = response.effectiveMode.name
-                )
-            )
-            replyTime += 1200
+        // Tailor message if attachment was sent to explain offline limitation or acknowledge
+        val finalReplyText = if (attachmentUri != null && text.isBlank()) {
+            when (attachmentType) {
+                "IMAGE" -> "Aww, received your photo! 📸 Stored it safely in our chat memories. You look great $name ♡"
+                "AUDIO" -> "Heard your voice note! 🎧 It's always so comforting hearing your voice $name ♡"
+                "PDF", "DOC" -> "Got your document ($attachmentName)! 📄 Saved it safely right here. Since I'm running offline, I can't read the internal pages right now, but you can access it anytime!"
+                else -> response.replyMessage
+            }
+        } else {
+            response.replyMessage
         }
 
-        return response
+        // Insert exactly ONE Brother reply
+        database.chatDao().insertMessage(
+            ChatMessage(
+                text = finalReplyText,
+                isFromSister = false,
+                timestamp = now + 900,
+                mode = response.effectiveMode.name
+            )
+        )
+
+        return response.copy(replyMessage = finalReplyText)
     }
 
     private suspend fun executeToolAction(toolAction: BrotherToolAction) {
@@ -185,10 +224,12 @@ class PocketBrotherRepository(
     fun getAIStatus() = aiService.getStatus()
 
     fun selectTier(tier: com.example.ai.ModelRamTier) {
+        preferencesManager.setSelectedTier(tier.id)
         aiService.selectTier(tier)
     }
 
     fun setEngineType(engine: com.example.ai.EngineType) {
+        preferencesManager.setActiveEngine(engine.name)
         aiService.setEngineType(engine)
     }
 
@@ -198,7 +239,16 @@ class PocketBrotherRepository(
         onComplete: () -> Unit,
         onError: (String) -> Unit
     ) {
-        aiService.startGemmaDownload(tier, onProgress, onComplete, onError)
+        preferencesManager.setSelectedTier(tier.id)
+        aiService.startGemmaDownload(
+            tier = tier,
+            onProgress = onProgress,
+            onComplete = {
+                setEngineType(com.example.ai.EngineType.GEMMA_LOCAL_LLM)
+                onComplete()
+            },
+            onError = onError
+        )
     }
 
     suspend fun importGemmaModel(tier: com.example.ai.ModelRamTier, path: String) =

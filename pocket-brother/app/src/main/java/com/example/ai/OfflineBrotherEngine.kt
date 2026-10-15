@@ -27,21 +27,14 @@ class OfflineBrotherEngine : AIService {
         val trimmed = sisterMessage.trim()
         val lower = trimmed.lowercase(Locale.ROOT)
 
-        // 1. Genuine Distress & Comfort Priority Check (Always shifts to comfort mode when sister hurts)
-        val distressTriggers = listOf(
-            "sad", "crying", "cry", "stressed", "stress", "depressed", "hurts", "hurt",
-            "alone", "stop teasing", "scared", "failed", "hate myself", "heartbroken",
-            "overwhelmed", "need a hug", "anxious", "panic", "breakdown", "unhappy",
-            "nobody loves me", "cant take it", "exhausted", "feeling down", "hopeless"
-        )
-        val hasDistress = distressTriggers.any { lower.contains(it) }
-        val effectiveMode = if (hasDistress) PersonalityMode.COMFORT else currentMode
+        // 1. Strictly use the currently selected personality mode
+        val effectiveMode = currentMode
 
         // 2. Tool Execution Detection (Reminders, Timers, Notes, Diary, Calendar, Tasks)
         val (toolAction, toolReply) = parseToolAction(lower, relationship, sisterName)
         if (toolAction != null && toolReply != null) {
             return BrotherResponse(
-                replyMessages = toolReply,
+                replyMessage = toolReply.joinToString("\n\n"),
                 toolAction = toolAction,
                 effectiveMode = effectiveMode
             )
@@ -57,8 +50,10 @@ class OfflineBrotherEngine : AIService {
             recentHistory = recentHistory
         )
 
+        val fullReply = if (replies.isNotEmpty()) replies.joinToString("\n\n") else "I'm right here with you $sisterName ♡"
+
         return BrotherResponse(
-            replyMessages = replies,
+            replyMessage = fullReply,
             toolAction = null,
             effectiveMode = effectiveMode
         )

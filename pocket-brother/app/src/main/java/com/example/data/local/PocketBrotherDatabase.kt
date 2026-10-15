@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
         MemoryItem::class,
         VoiceNoteItem::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class PocketBrotherDatabase : RoomDatabase() {
@@ -53,6 +53,7 @@ abstract class PocketBrotherDatabase : RoomDatabase() {
                     PocketBrotherDatabase::class.java,
                     "pocket_brother_db"
                 )
+                    .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback())
                     .build()
                 INSTANCE = instance
