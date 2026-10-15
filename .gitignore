@@ -1,0 +1,51 @@
+# ========================================================
+# POCKET BROTHER ROOT GITIGNORE
+# ========================================================
+
+# NEVER COMMIT APK OR BINARY APPLICATION PACKAGES
+*.apk
+*.aab
+*.ap_
+*.dex
+**/downloads/*.apk
+public/downloads/*.apk
+
+# Security & Private Signing Keys
+*.keystore
+*.jks
+debug.keystore
+**/debug.keystore
+my-upload-key.jks
+
+# Local SDK configuration & Environment files
+local.properties
+**/local.properties
+.env
+.env.*
+!.env.example
+
+# Gradle & Android Build outputs
+.gradle/
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Node & Frontend Build outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+*.local
+
+# IDE & OS specific files
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.swp
+*.log

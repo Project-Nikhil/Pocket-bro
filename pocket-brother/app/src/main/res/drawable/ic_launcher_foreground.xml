@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Group centered strictly in 66dp safe zone (21dp margins on 108dp viewport) -->
+    <group
+        android:translateX="24"
+        android:translateY="24">
+        <!-- Outer circle glow badge -->
+        <path
+            android:fillColor="#3D291F"
+            android:pathData="M30,0 C46.568,0 60,13.432 60,30 C60,46.568 46.568,60 30,60 C13.432,60 0,46.568 0,30 C0,13.432 13.432,0 30,0 Z" />
+
+        <!-- Brother Silhouette Head & Shoulders -->
+        <path
+            android:fillColor="#F6C687"
+            android:pathData="M30,12 C25.03,12 21,16.03 21,21 C21,25.97 25.03,30 30,30 C34.97,30 39,25.97 39,21 C39,16.03 34.97,12 30,12 Z" />
+        <path
+            android:fillColor="#E8A962"
+            android:pathData="M30,32 C21.16,32 14,37.37 14,44 L46,44 C46,37.37 38.84,32 30,32 Z" />
+
+        <!-- Loving Heart on shoulder/side -->
+        <path
+            android:fillColor="#FF7B7B"
+            android:pathData="M43.5,14 C42.12,14 40.8,14.65 40,15.68 C39.2,14.65 37.88,14 36.5,14 C34.01,14 32,16.01 32,18.5 C32,21.59 34.78,24.11 38.98,27.92 L40,28.85 L41.02,27.92 C45.22,24.11 48,21.59 48,18.5 C48,16.01 45.99,14 43.5,14 Z" />
+
+        <!-- Sparkles / warmth dots -->
+        <path
+            android:fillColor="#FFD992"
+            android:pathData="M16,16 A2,2 0 1,1 12,16 A2,2 0 1,1 16,16 Z" />
+        <path
+            android:fillColor="#FFD992"
+            android:pathData="M49,36 A1.5,1.5 0 1,1 46,36 A1.5,1.5 0 1,1 49,36 Z" />
+    </group>
+</vector>

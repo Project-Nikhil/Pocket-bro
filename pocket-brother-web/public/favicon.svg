@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="8" fill="#1E1815"/>
+  <rect x="1" y="1" width="30" height="30" rx="7" stroke="#3E322B" stroke-width="1"/>
+  <!-- Brother smile and heart -->
+  <circle cx="16" cy="14" r="7" fill="#2E231E" stroke="#F5C58A" stroke-width="1.5"/>
+  <circle cx="13.5" cy="13" r="1" fill="#FBF4ED"/>
+  <circle cx="18.5" cy="13" r="1" fill="#FBF4ED"/>
+  <path d="M13.5 16.5C14.2 17.5 17.8 17.5 18.5 16.5" stroke="#F5C58A" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Heart icon -->
+  <path d="M21 21C21 21 23 19 23 17.5C23 16.12 21.88 15 20.5 15C19.7 15 19 15.5 18.5 16.2C18 15.5 17.3 15 16.5 15C15.12 15 14 16.12 14 17.5C14 19 16 21 16 21L18.5 23.5L21 21Z" fill="#F87171" transform="scale(0.5) translate(16, 16)"/>
+</svg>

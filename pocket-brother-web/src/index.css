@@ -1,0 +1,286 @@
+@layer base {
+  :root {
+    --bg-primary: #14110F;
+    --bg-secondary: #191411;
+    --bg-tertiary: #1E1815;
+    --surface-card: #241D19;
+    --surface-elevated: #2E2520;
+    --surface-hover: #382D27;
+    --border-subtle: #2A211C;
+    --border-medium: #3A2F28;
+    --border-accent: rgba(245, 197, 138, 0.28);
+    --border-highlight: #4E3E34;
+
+    --text-cream: #FBF4ED;
+    --text-cream-pure: #FFFFFF;
+    --text-muted: #AFA39A;
+    --text-subtle: #7E726A;
+
+    --accent-amber: #F5C58A;
+    --accent-amber-glow: rgba(245, 197, 138, 0.15);
+    --accent-gold: #E8A862;
+    --accent-peach: #FFB285;
+    --accent-lavender: #8EA7E9;
+    --accent-lavender-glow: rgba(142, 167, 233, 0.15);
+
+    --mode-comfort-bg: #2A2B42;
+    --mode-comfort-border: #585F96;
+    --mode-comfort-accent: #8EA7E9;
+
+    --mode-irritative-bg: #3E2320;
+    --mode-irritative-border: #8E4035;
+    --mode-irritative-accent: #F87157;
+
+    --mode-funny-bg: #382F19;
+    --mode-funny-border: #8C732E;
+    --mode-funny-accent: #E5B842;
+
+    --whatsapp-green: #005C4B;
+    --whatsapp-bubble-me: #005C4B;
+    --whatsapp-bubble-bro: #27211D;
+    --whatsapp-ticks: #53BDEB;
+
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 9999px;
+
+    --shadow-subtle: 0 4px 18px rgba(0, 0, 0, 0.35);
+    --shadow-card: 0 8px 26px rgba(0, 0, 0, 0.45);
+    --shadow-elevated: 0 16px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  background-color: var(--bg-primary);
+  color: var(--text-cream);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-cream);
+  line-height: 1.55;
+  overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Typography styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-cream);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Touch target enhancement for mobile */
+button, a.btn-primary, a.btn-secondary {
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-amber);
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+/* Badges */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 197, 138, 0.08);
+  border: 1px solid rgba(245, 197, 138, 0.22);
+  color: var(--accent-amber);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Primary Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #F5C58A 0%, #E8A862 100%);
+  color: #1A120B;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 14px 24px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 18px rgba(232, 168, 98, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(232, 168, 98, 0.4);
+    background: linear-gradient(135deg, #FFE1B3 0%, #F5C58A 100%);
+  }
+}
+
+/* Secondary Button */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--surface-card);
+  color: var(--text-cream);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 13px 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-medium);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .btn-secondary:hover {
+    background: var(--surface-elevated);
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+  }
+}
+
+/* Card Base */
+.glass-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .glass-card:hover {
+    border-color: var(--border-highlight);
+    transform: translateY(-2px);
+  }
+}
+
+/* Section common */
+.section {
+  padding: 56px 0;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: 88px 0;
+  }
+}
+
+.section-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 36px auto;
+}
+
+.section-header h2 {
+  font-size: 1.75rem;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+
+@media (min-width: 768px) {
+  .section-header h2 {
+    font-size: 2.4rem;
+  }
+}
+
+.section-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 768px) {
+  .section-header p {
+    font-size: 1.05rem;
+  }
+}
+
+/* Hide scrollbar for clean horizontal swiping on mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

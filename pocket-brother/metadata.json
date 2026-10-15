@@ -1,0 +1,6 @@
+{
+  "name": "Pocket Brother",
+  "description": "Your always here kinda brother ♡ — an offline AI brother companion and daily life toolkit with chat, calendar, reminders, notes, timer, study planner, and memories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
