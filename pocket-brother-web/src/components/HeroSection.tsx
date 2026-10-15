@@ -195,16 +195,6 @@ export const HeroSection = ({ onOpenBuildGuide }: HeroSectionProps) => {
                   Direct APK Link
                   <ExternalLink size={12} />
                 </a>
-                <span> • </span>
-                <a
-                  href="#download-versions"
-                  style={{
-                    color: 'var(--accent-amber)',
-                    textDecoration: 'underline',
-                  }}
-                >
-                  All Versions (v0.0.1 / v0.0.2)
-                </a>
                 {onOpenBuildGuide && (
                   <>
                     <span> • </span>
